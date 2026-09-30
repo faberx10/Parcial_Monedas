@@ -1,0 +1,33 @@
+flowchart LR
+    subgraph USUARIO["Usuario"]
+        CEL["📱 Celular<br/>navegador web<br/>(página de control)"]
+    end
+
+    subgraph CONTROL["Etapa de control"]
+        ESP["ESP32 DevKit V1<br/>• Punto de acceso WiFi 'Carrito_G3'<br/>• Servidor web (puerto 80)<br/>• Rampas + parada de seguridad"]
+    end
+
+    subgraph POTENCIA["Etapa de potencia"]
+        L298["Puente H L298N<br/>canal A y canal B"]
+        MI["Motores izquierdos<br/>M1 + M2 (paralelo)"]
+        MD["Motores derechos<br/>M3 + M4 (paralelo)"]
+    end
+
+    subgraph ALIM["Alimentación"]
+        PB["Power bank 5 V<br/>(USB)"]
+        BAT["Batería Ni-MH 7,2 V<br/>500 mAh + conector J1"]
+    end
+
+    subgraph CARGA["Carga útil"]
+        DRON["Zona del dron<br/>(helipuerto con velcro)"]
+        VASOS["Portavasos<br/>1000 · 500 · 200"]
+    end
+
+    CEL -- "WiFi 2,4 GHz<br/>HTTP GET /cmd cada 150 ms" --> ESP
+    ESP -- "ENA / ENB (PWM)<br/>IN1–IN4 (dirección)" --> L298
+    L298 -- "OUT1 / OUT2" --> MI
+    L298 -- "OUT3 / OUT4" --> MD
+    PB -- "5 V" --> ESP
+    BAT -- "7,2 V" --> L298
+    ESP -. "GND común" .- L298
+    MI & MD -. "tracción 4WD" .-> CARGA

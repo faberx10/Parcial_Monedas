@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contador Inteligente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0C10; --panel:#11141A; --panel-2:#161A22; --line:#222733;
+    --text:#E7E9EE; --muted:#8B93A5; --faint:#5B6376;
+    --gold:#D9B45A; --gold-2:#F2D48A; --gold-dim:rgba(217,180,90,.14);
+    --green:#3FB97A; --red:#E5484D;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg)}
+  body{
+    background:radial-gradient(1200px 600px at 80% -10%, #151a24 0%, var(--bg) 60%) fixed;
+    color:var(--text); font-family:Inter,system-ui,sans-serif;
+    font-feature-settings:"tnum" 1; min-height:100vh;
+  }
+  .wrap{max-width:1320px;margin:0 auto;padding:24px 28px 40px}
+
+  /* ---------- header ---------- */
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .mark{width:38px;height:38px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--gold-2), var(--gold) 55%, #8a6d2c);
+    box-shadow:0 0 0 3px var(--gold-dim), 0 6px 18px rgba(217,180,90,.25)}
+  .brand h1{font-size:18px;font-weight:600;letter-spacing:.2px}
+  .brand p{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .actions{display:flex;align-items:center;gap:10px}
+  .pill{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;
+    background:var(--panel);border:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--faint)}
+  .pill.on .dot{background:var(--green);box-shadow:0 0 0 4px rgba(63,185,122,.15)}
+  .pill.off .dot{background:var(--red);box-shadow:0 0 0 4px rgba(229,72,77,.15)}
+  .btn{padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);
+    color:var(--text);font:500 13px Inter,sans-serif;cursor:pointer;transition:.15s}
+  .btn:hover{border-color:var(--gold);color:var(--gold-2)}
+
+  /* ---------- layout ---------- */
+  .grid{display:grid;grid-template-columns:1.35fr 1fr;gap:18px}
+  .card{background:linear-gradient(180deg,var(--panel) 0%, #0f1217 100%);
+    border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .card h2{font-size:12px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  .col{display:flex;flex-direction:column;gap:18px}
+
+  /* ---------- video ---------- */
+  .video{position:relative;padding:0;overflow:hidden;aspect-ratio:4/3;background:#07080b}
+  .video img{width:100%;height:100%;object-fit:cover;display:block}
+  .chip{position:absolute;top:14px;left:14px;display:flex;align-items:center;gap:7px;
+    padding:6px 10px;border-radius:8px;background:rgba(10,12,16,.72);backdrop-filter:blur(6px);
+    font-size:11.5px;font-weight:600;letter-spacing:.8px}
+  .chip .dot{background:var(--red);animation:blink 1.4s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  .hint{position:absolute;left:14px;right:14px;bottom:14px;padding:11px 14px;border-radius:10px;
+    background:rgba(10,12,16,.76);backdrop-filter:blur(6px);font-size:13.5px;color:var(--muted);
+    border:1px solid transparent;transition:.25s}
+  .hint.confirm{color:var(--gold-2);border-color:rgba(217,180,90,.35)}
+  .hint.done{color:#9BE3BD;border-color:rgba(63,185,122,.35)}
+  .fps{position:absolute;top:14px;right:14px;font-size:11.5px;color:var(--muted);
+    padding:6px 10px;border-radius:8px;background:rgba(10,12,16,.72)}
+
+  /* ---------- coin visual ---------- */
+  .coin{--c1:#E3C271;--c2:#E3C271;position:relative;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.55), transparent 42%),
+               radial-gradient(circle, var(--c1) 0 55%, var(--c2) 56% 100%);
+    box-shadow:inset 0 0 0 2px rgba(0,0,0,.25), inset 0 -6px 14px rgba(0,0,0,.28), 0 8px 22px rgba(0,0,0,.45);
+    display:grid;place-items:center;color:#2a2418;font-weight:700}
+  .coin.empty{--c1:#1b1f28;--c2:#1b1f28;box-shadow:inset 0 0 0 2px var(--line);color:var(--faint);background:#141821}
+  .coin .tag{position:absolute;bottom:10%;font-size:.34em;font-weight:700;letter-spacing:.6px;opacity:.75}
+
+  /* ---------- detection ---------- */
+  .det{display:flex;gap:20px;align-items:center}
+  .ring{position:relative;width:132px;height:132px;flex:none}
+  .ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+  .ring .coin{position:absolute;inset:12px;font-size:28px}
+  .det-info{flex:1;min-width:0}
+  .det-label{font-size:24px;font-weight:600;letter-spacing:-.2px}
+  .det-sub{font-size:12.5px;color:var(--muted);margin:4px 0 14px}
+  .bar{position:relative;height:8px;border-radius:99px;background:#1c212b;overflow:visible}
+  .bar-fill{height:100%;border-radius:99px;background:var(--faint);width:0;transition:width .18s, background .18s}
+  .bar-fill.ok{background:linear-gradient(90deg,#b8923d,var(--gold-2))}
+  .bar-mark{position:absolute;top:-4px;width:2px;height:16px;background:var(--muted);border-radius:2px}
+  .bar-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:7px}
+  .top{margin-top:16px;display:flex;flex-direction:column;gap:7px}
+  .top-row{display:grid;grid-template-columns:1fr 60px;gap:10px;font-size:12.5px;color:var(--muted);align-items:center}
+  .top-row .t{display:flex;align-items:center;gap:8px}
+  .mini-bar{height:4px;border-radius:9px;background:#1c212b;margin-top:4px}
+  .mini-bar i{display:block;height:100%;border-radius:9px;background:#3a4252}
+  .top-row:first-child .mini-bar i{background:var(--gold)}
+  .top-row span:last-child{text-align:right}
+
+  /* ---------- totals ---------- */
+  .totals{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}
+  .big{font-size:40px;font-weight:700;letter-spacing:-1px;line-height:1.05}
+  .big.gold{background:linear-gradient(180deg,var(--gold-2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lbl{font-size:12px;color:var(--muted);margin-top:6px}
+
+  /* ---------- counters ---------- */
+  .counters{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-top:18px}
+  .cnt{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 12px 12px;
+    display:flex;flex-direction:column;align-items:center;gap:8px;transition:border-color .3s, box-shadow .3s}
+  .cnt .coin{width:52px;height:52px;font-size:14px}
+  .cnt .name{font-size:12px;color:var(--muted);text-align:center}
+  .cnt .n{font-size:26px;font-weight:700}
+  .cnt .share{width:100%;height:3px;border-radius:3px;background:#1c212b}
+  .cnt .share i{display:block;height:100%;border-radius:3px;background:var(--gold);width:0;transition:width .4s}
+  .cnt.live{border-color:rgba(217,180,90,.55)}
+  .cnt.bump{animation:bump .6s ease}
+  @keyframes bump{0%{box-shadow:0 0 0 0 rgba(217,180,90,.55)}35%{transform:translateY(-3px);box-shadow:0 0 0 6px rgba(217,180,90,.12)}100%{transform:none;box-shadow:0 0 0 0 transparent}}
+
+  /* ---------- history ---------- */
+  .hist{margin-top:18px}
+  .hist-list{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px}
+  .hist-empty{font-size:13px;color:var(--faint);padding:10px 2px}
+  .ev{flex:none;width:132px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:8px;animation:in .35s ease}
+  .ev img{width:100%;aspect-ratio:1;border-radius:8px;object-fit:cover;display:block}
+  .ev b{display:block;font-size:12.5px;font-weight:600;margin-top:7px}
+  .ev small{font-size:11.5px;color:var(--muted)}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ---------- toast ---------- */
+  .toast{position:fixed;top:22px;left:50%;transform:translate(-50%,calc(-100% - 40px));padding:11px 18px;border-radius:12px;
+    background:#141821;border:1px solid rgba(217,180,90,.45);box-shadow:0 12px 30px rgba(0,0,0,.5);
+    font-size:14px;font-weight:600;color:var(--gold-2);transition:transform .35s cubic-bezier(.2,.9,.3,1.2);z-index:10}
+  .toast.show{transform:translate(-50%,0)}
+
+  @media (max-width:1100px){.counters{grid-template-columns:repeat(4,1fr)}}
+  @media (max-width:900px){header{flex-direction:column;align-items:flex-start}.grid{grid-template-columns:1fr}.wrap{padding:16px}.counters{grid-template-columns:repeat(2,1fr)}.big{font-size:32px}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <h1>Contador Inteligente de Monedas</h1>
+        <p>Grupo 3 · Sistema de Logística de Monedas · ESP32-CAM</p>
+      </div>
+    </div>
+    <div class="actions">
+      <div class="pill off" id="estado"><span class="dot"></span><span id="estado-txt">Conectando…</span></div>
+      <button class="btn" id="reset">Reiniciar conteo</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="card video">
+      <img id="video" src="/video" alt="Video en vivo de la ESP32-CAM">
+      <div class="chip"><span class="dot"></span>EN VIVO</div>
+      <div class="fps" id="fps">— fps</div>
+      <div class="hint" id="hint">Coloca una moneda dentro del círculo</div>
+    </div>
+
+    <div class="col">
+      <div class="card">
+        <h2>Detección actual</h2>
+        <div class="det">
+          <div class="ring">
+            <svg viewBox="0 0 132 132">
+              <circle cx="66" cy="66" r="62" fill="none" stroke="#1c212b" stroke-width="4"/>
+              <circle id="prog" cx="66" cy="66" r="62" fill="none" stroke="#D9B45A" stroke-width="4"
+                      stroke-linecap="round" stroke-dasharray="389.6" stroke-dashoffset="389.6"
+                      style="transition:stroke-dashoffset .15s"/>
+            </svg>
+            <div class="coin empty" id="det-coin">—</div>
+          </div>
+          <div class="det-info">
+            <div class="det-label" id="det-label">Sin moneda</div>
+            <div class="det-sub" id="det-sub">Esperando…</div>
+            <div class="bar"><div class="bar-fill" id="conf-fill"></div><div class="bar-mark" id="conf-mark"></div></div>
+            <div class="bar-meta"><span>Confianza</span><span id="conf-txt">0%</span></div>
+          </div>
+        </div>
+        <div class="top" id="top"></div>
+      </div>
+
+      <div class="card">
+        <h2>Resumen</h2>
+        <div class="totals">
+          <div><div class="big gold" id="total-pesos">$0</div><div class="lbl">Valor procesado</div></div>
+          <div><div class="big" id="total-monedas">0</div><div class="lbl">Monedas contadas</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="counters" id="counters"></div>
+
+  <div class="card hist">
+    <h2>Últimas monedas registradas</h2>
+    <div class="hist-list" id="hist"><div class="hist-empty">Aún no se ha contado ninguna moneda.</div></div>
+  </div>
+</div>
+
+<script>
+// Apariencia de cada moneda (colores aproximados; ajústalos a gusto)
+const ESTILO = {
+  "1000_nueva":  {c1:"#D9DCE2", c2:"#D8B25C", txt:"1000", tag:"NUEVA"},
+  "500_nueva":   {c1:"#D8B25C", c2:"#CFD3DA", txt:"500",  tag:"NUEVA"},
+  "500_antigua": {c1:"#C9A45A", c2:"#BFC3C9", txt:"500",  tag:"ANTIGUA"},
+  "200_nueva":   {c1:"#DDBB66", c2:"#DDBB66", txt:"200",  tag:"NUEVA"},
+  "200_antigua": {c1:"#CDB27A", c2:"#CDB27A", txt:"200",  tag:"ANTIGUA"},
+  "100_nueva":   {c1:"#D6AE58", c2:"#D6AE58", txt:"100",  tag:"NUEVA"},
+  "100_antigua": {c1:"#BFC2C7", c2:"#BFC2C7", txt:"100",  tag:"ANTIGUA"},
+};
+const ORDEN = Object.keys(ESTILO);
+const $ = id => document.getElementById(id);
+const pesos = v => "$" + Math.round(v).toLocaleString("es-CO");
+
+function pintarMoneda(el, clase){
+  const e = ESTILO[clase];
+  if(!e){ el.className = "coin empty"; el.innerHTML = "—"; return; }
+  el.className = "coin";
+  el.style.setProperty("--c1", e.c1); el.style.setProperty("--c2", e.c2);
+  el.innerHTML = `${e.txt}<span class="tag">${e.tag}</span>`;
+}
+
+// ---- tarjetas de contador ----
+let etiquetas = {};
+async function construir(){
+  try { etiquetas = await (await fetch("/clases")).json(); } catch { }
+  $("counters").innerHTML = ORDEN.map(c => `
+    <div class="cnt" id="cnt-${c}">
+      <div class="coin" id="cc-${c}"></div>
+      <div class="name">${etiquetas[c]?.etiqueta ?? c}</div>
+      <div class="n" id="n-${c}">0</div>
+      <div class="share"><i id="s-${c}"></i></div>
+    </div>`).join("");
+  ORDEN.forEach(c => pintarMoneda($("cc-"+c), c));
+}
+
+// ---- animacion del total ----
+let totalMostrado = 0, totalObjetivo = 0;
+function animarTotal(){
+  totalMostrado += (totalObjetivo - totalMostrado) * 0.18;
+  if(Math.abs(totalObjetivo - totalMostrado) < 1) totalMostrado = totalObjetivo;
+  $("total-pesos").textContent = pesos(totalMostrado);
+  requestAnimationFrame(animarTotal);
+}
+
+let toastT;
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+function agregarEvento(ev){
+  const lista = $("hist");
+  lista.querySelector(".hist-empty")?.remove();
+  const d = document.createElement("div");
+  d.className = "ev";
+  d.innerHTML = `<img src="${ev.miniatura}" alt=""><b>${ev.etiqueta}</b>
+    <small>${ev.hora} · ${(ev.confianza*100).toFixed(0)}%</small>`;
+  lista.prepend(d);
+  while(lista.children.length > 12) lista.lastChild.remove();
+}
+
+let conteoPrevio = {};
+function render(s){
+  // estado de conexion
+  const pill = $("estado");
+  pill.className = "pill " + (s.conectada ? "on" : "off");
+  $("estado-txt").textContent = s.conectada ? "ESP32-CAM conectada" : "Sin señal de la cámara";
+  $("fps").textContent = `${s.fps_camara} fps · IA ${s.fps_inferencia}/s`;
+
+  // deteccion actual
+  const p = s.prediccion, esMoneda = p.clase && p.clase !== "fondo";
+  const segura = p.confianza >= s.umbral;
+  pintarMoneda($("det-coin"), esMoneda && segura ? p.clase : null);
+  $("det-label").textContent = esMoneda && segura ? p.etiqueta : (esMoneda ? "Analizando…" : "Sin moneda");
+  $("det-sub").textContent = esMoneda && segura ? pesos(etiquetas[p.clase]?.valor ?? 0) + " · clase " + p.clase : "Umbral de aceptación " + Math.round(s.umbral*100) + "%";
+  const fill = $("conf-fill");
+  fill.style.width = (p.confianza*100).toFixed(1) + "%";
+  fill.classList.toggle("ok", segura && esMoneda);
+  $("conf-mark").style.left = (s.umbral*100) + "%";
+  $("conf-txt").textContent = (p.confianza*100).toFixed(1) + "%";
+  $("prog").style.strokeDashoffset = 389.6 * (1 - (s.armado ? s.progreso : 1));
+  $("prog").style.stroke = s.armado ? "#D9B45A" : "#3FB97A";
+  $("top").innerHTML = p.top.map(([c, et, pr]) => `
+    <div class="top-row"><div><div class="t">${et}</div><div class="mini-bar"><i style="width:${(pr*100).toFixed(1)}%"></i></div></div>
+    <span>${(pr*100).toFixed(1)}%</span></div>`).join("");
+
+  // pista sobre el video
+  const hint = $("hint");
+  if(!s.armado){ hint.className = "hint done"; hint.textContent = "✓ Moneda registrada — retírala para contar la siguiente"; }
+  else if(esMoneda && segura){ hint.className = "hint confirm"; hint.textContent = `Confirmando ${p.etiqueta}… mantenla quieta`; }
+  else { hint.className = "hint"; hint.textContent = "Coloca una moneda dentro del círculo"; }
+
+  // contadores
+  const max = Math.max(1, ...Object.values(s.conteo));
+  ORDEN.forEach(c => {
+    const n = s.conteo[c] ?? 0;
+    $("n-"+c).textContent = n;
+    $("s-"+c).style.width = (n / max * 100) + "%";
+    const card = $("cnt-"+c);
+    card.classList.toggle("live", esMoneda && segura && p.clase === c);
+    if(conteoPrevio[c] !== undefined && n > conteoPrevio[c]){
+      card.classList.remove("bump"); void card.offsetWidth; card.classList.add("bump");
+    }
+  });
+  conteoPrevio = {...s.conteo};
+  totalObjetivo = s.total_pesos;
+  $("total-monedas").textContent = s.total_monedas;
+
+  (s.eventos || []).forEach(ev => {
+    agregarEvento(ev);
+    toast(`+ ${ev.etiqueta}  ·  ${(ev.confianza*100).toFixed(0)}%`);
+  });
+}
+
+function conectar(){
+  const ws = new WebSocket(`ws://${location.host}/ws`);
+  ws.onmessage = e => render(JSON.parse(e.data));
+  ws.onclose = () => {
+    $("estado").className = "pill off"; $("estado-txt").textContent = "Servidor desconectado";
+    setTimeout(conectar, 1500);
+  };
+}
+
+$("reset").onclick = async () => {
+  await fetch("/reset", {method:"POST"});
+  $("hist").innerHTML = '<div class="hist-empty">Aún no se ha contado ninguna moneda.</div>';
+  conteoPrevio = {};
+};
+
+construir().then(() => { conectar(); animarTotal(); });
+</script>
+</body>
+</html>

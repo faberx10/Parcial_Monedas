@@ -1,0 +1,357 @@
+<?xml version="1.0"?>
+<!-- ==============================================================
+     SISTEMA DE LOGISTICA DE MONEDAS INTELIGENTES - GRUPO 3
+     planta_monedas_v2.urdf  |  FASE 2b: brazos articulados, SIN carro (lo reemplaza el dron.urdf)
+
+     Cambios sobre v1: los joints hombro/codo/muneca de cada brazo
+     pasan de fixed a revolute, y los dedos de la pinza a prismatic.
+     Bandas, maquina, contenedores y carro quedan igual que en v1
+     (fixed). Las monedas se mueven por codigo en la Fase 3, no
+     con un joint de banda.
+     ============================================================== -->
+<robot name="planta_monedas_g3">
+
+  <material name="azul_metal"><color rgba="0.05 0.15 0.35 1"/></material>
+  <material name="caucho_negro"><color rgba="0.08 0.08 0.08 1"/></material>
+  <material name="blanco_maquina"><color rgba="0.93 0.93 0.96 1"/></material>
+  <material name="acero"><color rgba="0.45 0.45 0.48 1"/></material>
+  <material name="piso"><color rgba="0.28 0.28 0.30 1"/></material>
+  <material name="brazo_a"><color rgba="0.20 0.60 0.80 1"/></material>
+  <material name="brazo_b"><color rgba="0.90 0.50 0.10 1"/></material>
+  <material name="pinza"><color rgba="0.80 0.20 0.20 1"/></material>
+  <material name="dedo"><color rgba="0.90 0.90 0.90 1"/></material>
+  <material name="carro"><color rgba="0.10 0.30 0.60 1"/></material>
+  <material name="led_verde"><color rgba="0.10 0.85 0.20 1"/></material>
+  <material name="led_ambar"><color rgba="0.95 0.70 0.10 1"/></material>
+  <material name="led_rojo"><color rgba="0.90 0.10 0.10 1"/></material>
+  <material name="sensor"><color rgba="0.15 0.15 0.18 1"/></material>
+
+  <link name="base_planta">
+    <visual><geometry><box size="9.0 7.0 0.05"/></geometry><origin xyz="1.0 -2.0 -0.025" rpy="0 0 0"/><material name="piso"/></visual>
+    <inertial><mass value="1000.0"/><inertia ixx="100.0" ixy="0" ixz="0" iyy="100.0" iyz="0" izz="100.0"/></inertial>
+  </link>
+
+  <link name="maquina_base">
+    <visual><geometry><box size="2.0 1.2 0.1"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/><material name="azul_metal"/></visual>
+    <collision><geometry><box size="2.0 1.2 0.1"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/></collision>
+    <inertial><mass value="50.0"/><inertia ixx="10.0" ixy="0" ixz="0" iyy="10.0" iyz="0" izz="10.0"/></inertial>
+  </link>
+  <joint name="j_maquina_base" type="fixed">
+    <parent link="base_planta"/><child link="maquina_base"/>
+    <!-- Reubicada al extremo derecho de cinta_1 y girada 180 grados
+         (antes estaba en X=-1.9 junto a cinta_2, con la rampa saliendo
+         hacia -1: eso pondria a las monedas casi encima de cinta_2,
+         sin pasar por brazo1). Girada, la rampa (que sale +1.16 en X
+         local) queda apuntando hacia -X en el mundo, entregando cerca
+         de X=2.7, bien dentro del tramo recto de cinta_1. -->
+    <origin xyz="3.9 0 0.05" rpy="0 0 3.14159"/>
+  </joint>
+  <link name="maquina_cuerpo">
+    <visual><geometry><box size="1.8 1.2 1.5"/></geometry><origin xyz="0 0 0.75" rpy="0 0 0"/><material name="blanco_maquina"/></visual>
+    <visual><geometry><cylinder radius="0.05" length="0.04"/></geometry><origin xyz="-0.55 -0.61 1.25" rpy="1.5708 0 0"/><material name="led_verde"/></visual>
+    <visual><geometry><cylinder radius="0.05" length="0.04"/></geometry><origin xyz="-0.35 -0.61 1.25" rpy="1.5708 0 0"/><material name="led_ambar"/></visual>
+    <visual><geometry><cylinder radius="0.05" length="0.04"/></geometry><origin xyz="-0.15 -0.61 1.25" rpy="1.5708 0 0"/><material name="led_rojo"/></visual>
+    <collision><geometry><box size="1.8 1.2 1.5"/></geometry><origin xyz="0 0 0.75" rpy="0 0 0"/></collision>
+    <inertial><mass value="80.0"/><inertia ixx="20.0" ixy="0" ixz="0" iyy="20.0" iyz="0" izz="20.0"/></inertial>
+  </link>
+  <joint name="j_maquina_cuerpo" type="fixed">
+    <parent link="maquina_base"/><child link="maquina_cuerpo"/>
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+  </joint>
+  <link name="maquina_tolva">
+    <visual><geometry><cylinder radius="0.38" length="0.3"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.3" length="0.1"/></geometry><origin xyz="0 0 0.20" rpy="0 0 0"/><material name="azul_metal"/></visual>
+    <inertial><mass value="5.0"/><inertia ixx="0.5" ixy="0" ixz="0" iyy="0.5" iyz="0" izz="0.5"/></inertial>
+  </link>
+  <joint name="j_maquina_tolva" type="fixed">
+    <parent link="maquina_cuerpo"/><child link="maquina_tolva"/>
+    <origin xyz="0 0 1.65" rpy="0 0 0"/>
+  </joint>
+  <link name="maquina_salida">
+    <visual><geometry><box size="0.6 0.34 0.04"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/><material name="acero"/></visual>
+    <!-- Sin <collision> a proposito: es solo decorativa. Con colision,
+         la moneda caia sobre la rampa inclinada y la friccion alta que
+         necesita la banda (para no resbalar) tambien la trababa aqui,
+         sin dejarla deslizar. Ahora la moneda cae derecho hacia la
+         banda, pasando "a traves" de la rampa visualmente. -->
+    <inertial><mass value="2.0"/><inertia ixx="0.2" ixy="0" ixz="0" iyy="0.2" iyz="0" izz="0.2"/></inertial>
+  </link>
+  <joint name="j_maquina_salida" type="fixed">
+    <parent link="maquina_cuerpo"/><child link="maquina_salida"/>
+    <origin xyz="1.16 0 0.63" rpy="0 0.30 0"/>
+  </joint>
+
+  <link name="cinta_1">
+    <visual><geometry><box size="4.0 0.4 0.1"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/><material name="azul_metal"/></visual>
+    <visual><geometry><box size="3.9 0.3 0.05"/></geometry><origin xyz="0 0 0.08" rpy="0 0 0"/><material name="caucho_negro"/></visual>
+    <visual><geometry><cylinder radius="0.06" length="0.32"/></geometry><origin xyz="-1.95 0 0.055" rpy="1.5708 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.06" length="0.32"/></geometry><origin xyz=" 1.95 0 0.055" rpy="1.5708 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="-1.8 -0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="-1.8 0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="0.0 -0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="0.0 0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="1.8 -0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="1.8 0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <collision><geometry><box size="4.0 0.4 0.1"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/></collision>
+    <collision><geometry><box size="3.9 0.3 0.05"/></geometry><origin xyz="0 0 0.08" rpy="0 0 0"/></collision>
+    <inertial><mass value="20.0"/><inertia ixx="10.0" ixy="0" ixz="0" iyy="10.0" iyz="0" izz="10.0"/></inertial>
+  </link>
+  <joint name="j_cinta_1" type="fixed">
+    <parent link="base_planta"/><child link="cinta_1"/>
+    <origin xyz="1.0 0.0 0.5" rpy="0 0 0"/>
+  </joint>
+  <link name="cinta_2">
+    <visual><geometry><box size="4.0 0.4 0.1"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/><material name="azul_metal"/></visual>
+    <visual><geometry><box size="3.9 0.3 0.05"/></geometry><origin xyz="0 0 0.08" rpy="0 0 0"/><material name="caucho_negro"/></visual>
+    <visual><geometry><cylinder radius="0.06" length="0.32"/></geometry><origin xyz="-1.95 0 0.055" rpy="1.5708 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.06" length="0.32"/></geometry><origin xyz=" 1.95 0 0.055" rpy="1.5708 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="-1.8 -0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="-1.8 0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="0.0 -0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="0.0 0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="1.8 -0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="1.8 0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <collision><geometry><box size="4.0 0.4 0.1"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/></collision>
+    <collision><geometry><box size="3.9 0.3 0.05"/></geometry><origin xyz="0 0 0.08" rpy="0 0 0"/></collision>
+    <inertial><mass value="20.0"/><inertia ixx="10.0" ixy="0" ixz="0" iyy="10.0" iyz="0" izz="10.0"/></inertial>
+  </link>
+  <joint name="j_cinta_2" type="fixed">
+    <parent link="base_planta"/><child link="cinta_2"/>
+    <origin xyz="-1.0 -2.0 0.5" rpy="0 0 1.5708"/>
+  </joint>
+  <link name="cinta_3">
+    <visual><geometry><box size="4.0 0.4 0.1"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/><material name="azul_metal"/></visual>
+    <visual><geometry><box size="3.9 0.3 0.05"/></geometry><origin xyz="0 0 0.08" rpy="0 0 0"/><material name="caucho_negro"/></visual>
+    <visual><geometry><cylinder radius="0.06" length="0.32"/></geometry><origin xyz="-1.95 0 0.055" rpy="1.5708 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.06" length="0.32"/></geometry><origin xyz=" 1.95 0 0.055" rpy="1.5708 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="-1.8 -0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="-1.8 0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="0.0 -0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="0.0 0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="1.8 -0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><cylinder radius="0.04" length="0.45"/></geometry><origin xyz="1.8 0.15 -0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <collision><geometry><box size="4.0 0.4 0.1"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/></collision>
+    <collision><geometry><box size="3.9 0.3 0.05"/></geometry><origin xyz="0 0 0.08" rpy="0 0 0"/></collision>
+    <inertial><mass value="20.0"/><inertia ixx="10.0" ixy="0" ixz="0" iyy="10.0" iyz="0" izz="10.0"/></inertial>
+  </link>
+  <joint name="j_cinta_3" type="fixed">
+    <parent link="base_planta"/><child link="cinta_3"/>
+    <origin xyz="1.0 -4.0 0.5" rpy="0 0 0"/>
+  </joint>
+
+  <link name="estacion_sensado">
+    <visual><geometry><box size="0.06 0.06 0.55"/></geometry><origin xyz="0 -0.32 0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><box size="0.06 0.06 0.55"/></geometry><origin xyz="0  0.32 0.275" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><box size="0.1 0.7 0.08"/></geometry><origin xyz="0  0.00 0.585" rpy="0 0 0"/><material name="acero"/></visual>
+    <visual><geometry><box size="0.08 0.12 0.1"/></geometry><origin xyz="0  0.00 0.505" rpy="0 0 0"/><material name="sensor"/></visual>
+    <inertial><mass value="3.0"/><inertia ixx="0.3" ixy="0" ixz="0" iyy="0.3" iyz="0" izz="0.3"/></inertial>
+  </link>
+  <joint name="j_estacion_sensado" type="fixed">
+    <parent link="base_planta"/><child link="estacion_sensado"/>
+    <origin xyz="0.2 0.0 0.0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ========== BRAZO 1 (clasificacion, junto a cinta_1) ========== -->
+  <link name="brazo1_base">
+    <visual><geometry><cylinder radius="0.25" length="0.15"/></geometry><origin xyz="0 0 0.075" rpy="0 0 0"/><material name="acero"/></visual>
+    <inertial><mass value="5.0"/><inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/></inertial>
+  </link>
+  <joint name="j_brazo1_planta" type="fixed">
+    <parent link="base_planta"/><child link="brazo1_base"/>
+    <origin xyz="1.50 -0.80 0.0" rpy="0 0 1.5708"/>
+  </joint>
+  <link name="brazo1_seg1">
+    <visual><geometry><cylinder radius="0.06" length="0.5"/></geometry><origin xyz="0 0 0.25" rpy="0 0 0"/><material name="brazo_a"/></visual>
+    <inertial><mass value="2.0"/><inertia ixx="0.05" ixy="0" ixz="0" iyy="0.05" iyz="0" izz="0.05"/></inertial>
+  </link>
+  <joint name="j_brazo1_hombro" type="revolute">
+    <parent link="brazo1_base"/><child link="brazo1_seg1"/>
+    <origin xyz="0 0 0.15" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14" upper="3.14" effort="15.0" velocity="2.0"/>
+  </joint>
+  <link name="brazo1_seg2">
+    <visual><geometry><cylinder radius="0.05" length="0.45"/></geometry><origin xyz="0 0 0.225" rpy="0 0 0"/><material name="brazo_b"/></visual>
+    <inertial><mass value="1.5"/><inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/></inertial>
+  </link>
+  <joint name="j_brazo1_codo" type="revolute">
+    <parent link="brazo1_seg1"/><child link="brazo1_seg2"/>
+    <origin xyz="0 0 0.50" rpy="0 1.5708 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-2.0" upper="2.0" effort="10.0" velocity="2.0"/>
+  </joint>
+  <link name="brazo1_gripper">
+    <visual><geometry><box size="0.1 0.14 0.04"/></geometry><origin xyz="0 0 0.02" rpy="0 0 0"/><material name="pinza"/></visual>
+    <inertial><mass value="0.5"/><inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/></inertial>
+  </link>
+  <joint name="j_brazo1_muneca" type="revolute">
+    <parent link="brazo1_seg2"/><child link="brazo1_gripper"/>
+    <origin xyz="0 0 0.45" rpy="0 1.5708 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.8" upper="1.8" effort="5.0" velocity="2.0"/>
+  </joint>
+  <link name="brazo1_dedo_izq">
+    <visual><geometry><box size="0.025 0.09 0.12"/></geometry><origin xyz="-0.055 0 0.06" rpy="0 0 0"/><material name="dedo"/></visual>
+    <collision><geometry><box size="0.025 0.09 0.12"/></geometry><origin xyz="-0.055 0 0.06" rpy="0 0 0"/></collision>
+    <inertial><mass value="0.2"/><inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/></inertial>
+  </link>
+  <joint name="j_brazo1_dedo_izq" type="prismatic">
+    <parent link="brazo1_gripper"/><child link="brazo1_dedo_izq"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="-1 0 0"/>
+    <limit lower="0.0" upper="0.03" effort="8.0" velocity="0.5"/>
+  </joint>
+  <link name="brazo1_dedo_der">
+    <visual><geometry><box size="0.025 0.09 0.12"/></geometry><origin xyz="0.055 0 0.06" rpy="0 0 0"/><material name="dedo"/></visual>
+    <collision><geometry><box size="0.025 0.09 0.12"/></geometry><origin xyz="0.055 0 0.06" rpy="0 0 0"/></collision>
+    <inertial><mass value="0.2"/><inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/></inertial>
+  </link>
+  <joint name="j_brazo1_dedo_der" type="prismatic">
+    <parent link="brazo1_gripper"/><child link="brazo1_dedo_der"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0.0" upper="0.03" effort="8.0" velocity="0.5"/>
+  </joint>
+  <!-- ========== BRAZO 2 (despacho, junto a cinta_3) ========== -->
+  <link name="brazo2_base">
+    <visual><geometry><cylinder radius="0.25" length="0.15"/></geometry><origin xyz="0 0 0.075" rpy="0 0 0"/><material name="acero"/></visual>
+    <inertial><mass value="5.0"/><inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/></inertial>
+  </link>
+  <joint name="j_brazo2_planta" type="fixed">
+    <parent link="base_planta"/><child link="brazo2_base"/>
+    <origin xyz="2.50 -4.80 0.0" rpy="0 0 1.5708"/>
+  </joint>
+  <link name="brazo2_seg1">
+    <visual><geometry><cylinder radius="0.06" length="0.5"/></geometry><origin xyz="0 0 0.25" rpy="0 0 0"/><material name="brazo_a"/></visual>
+    <inertial><mass value="2.0"/><inertia ixx="0.05" ixy="0" ixz="0" iyy="0.05" iyz="0" izz="0.05"/></inertial>
+  </link>
+  <joint name="j_brazo2_hombro" type="revolute">
+    <parent link="brazo2_base"/><child link="brazo2_seg1"/>
+    <origin xyz="0 0 0.15" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14" upper="3.14" effort="15.0" velocity="2.0"/>
+  </joint>
+  <link name="brazo2_seg2">
+    <visual><geometry><cylinder radius="0.05" length="0.45"/></geometry><origin xyz="0 0 0.225" rpy="0 0 0"/><material name="brazo_b"/></visual>
+    <inertial><mass value="1.5"/><inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/></inertial>
+  </link>
+  <joint name="j_brazo2_codo" type="revolute">
+    <parent link="brazo2_seg1"/><child link="brazo2_seg2"/>
+    <origin xyz="0 0 0.50" rpy="0 1.5708 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-2.0" upper="2.0" effort="10.0" velocity="2.0"/>
+  </joint>
+  <link name="brazo2_gripper">
+    <visual><geometry><box size="0.1 0.14 0.04"/></geometry><origin xyz="0 0 0.02" rpy="0 0 0"/><material name="pinza"/></visual>
+    <inertial><mass value="0.5"/><inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/></inertial>
+  </link>
+  <joint name="j_brazo2_muneca" type="revolute">
+    <parent link="brazo2_seg2"/><child link="brazo2_gripper"/>
+    <origin xyz="0 0 0.45" rpy="0 1.5708 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.8" upper="1.8" effort="5.0" velocity="2.0"/>
+  </joint>
+  <link name="brazo2_dedo_izq">
+    <visual><geometry><box size="0.025 0.09 0.12"/></geometry><origin xyz="-0.055 0 0.06" rpy="0 0 0"/><material name="dedo"/></visual>
+    <collision><geometry><box size="0.025 0.09 0.12"/></geometry><origin xyz="-0.055 0 0.06" rpy="0 0 0"/></collision>
+    <inertial><mass value="0.2"/><inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/></inertial>
+  </link>
+  <joint name="j_brazo2_dedo_izq" type="prismatic">
+    <parent link="brazo2_gripper"/><child link="brazo2_dedo_izq"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="-1 0 0"/>
+    <limit lower="0.0" upper="0.03" effort="8.0" velocity="0.5"/>
+  </joint>
+  <link name="brazo2_dedo_der">
+    <visual><geometry><box size="0.025 0.09 0.12"/></geometry><origin xyz="0.055 0 0.06" rpy="0 0 0"/><material name="dedo"/></visual>
+    <collision><geometry><box size="0.025 0.09 0.12"/></geometry><origin xyz="0.055 0 0.06" rpy="0 0 0"/></collision>
+    <inertial><mass value="0.2"/><inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/></inertial>
+  </link>
+  <joint name="j_brazo2_dedo_der" type="prismatic">
+    <parent link="brazo2_gripper"/><child link="brazo2_dedo_der"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0.0" upper="0.03" effort="8.0" velocity="0.5"/>
+  </joint>
+
+  <link name="contenedor_200">
+    <visual><geometry><cylinder radius="0.13" length="0.4"/></geometry><origin xyz="0 0 0.20" rpy="0 0 0"/><material name="azul_metal"/></visual>
+    <visual><geometry><cylinder radius="0.14" length="0.04"/></geometry><origin xyz="0 0 0.40" rpy="0 0 0"/><material name="blanco_maquina"/></visual>
+    <collision><geometry><cylinder radius="0.13" length="0.4"/></geometry><origin xyz="0 0 0.20" rpy="0 0 0"/></collision>
+    <inertial><mass value="3.0"/><inertia ixx="0.2" ixy="0" ixz="0" iyy="0.2" iyz="0" izz="0.2"/></inertial>
+  </link>
+  <joint name="j_contenedor_200" type="fixed">
+    <parent link="base_planta"/><child link="contenedor_200"/>
+    <origin xyz="1.0 -1.35 0.0" rpy="0 0 0"/>
+  </joint>
+  <link name="contenedor_500">
+    <visual><geometry><cylinder radius="0.13" length="0.4"/></geometry><origin xyz="0 0 0.20" rpy="0 0 0"/><material name="azul_metal"/></visual>
+    <visual><geometry><cylinder radius="0.14" length="0.04"/></geometry><origin xyz="0 0 0.40" rpy="0 0 0"/><material name="blanco_maquina"/></visual>
+    <collision><geometry><cylinder radius="0.13" length="0.4"/></geometry><origin xyz="0 0 0.20" rpy="0 0 0"/></collision>
+    <inertial><mass value="3.0"/><inertia ixx="0.2" ixy="0" ixz="0" iyy="0.2" iyz="0" izz="0.2"/></inertial>
+  </link>
+  <joint name="j_contenedor_500" type="fixed">
+    <parent link="base_planta"/><child link="contenedor_500"/>
+    <origin xyz="1.5 -1.35 0.0" rpy="0 0 0"/>
+  </joint>
+  <link name="contenedor_1000">
+    <visual><geometry><cylinder radius="0.13" length="0.4"/></geometry><origin xyz="0 0 0.20" rpy="0 0 0"/><material name="azul_metal"/></visual>
+    <visual><geometry><cylinder radius="0.14" length="0.04"/></geometry><origin xyz="0 0 0.40" rpy="0 0 0"/><material name="blanco_maquina"/></visual>
+    <collision><geometry><cylinder radius="0.13" length="0.4"/></geometry><origin xyz="0 0 0.20" rpy="0 0 0"/></collision>
+    <inertial><mass value="3.0"/><inertia ixx="0.2" ixy="0" ixz="0" iyy="0.2" iyz="0" izz="0.2"/></inertial>
+  </link>
+  <joint name="j_contenedor_1000" type="fixed">
+    <parent link="base_planta"/><child link="contenedor_1000"/>
+    <!-- Reposicionado lejos de brazo2_base (radio 0.25 m, centro en
+         2.50,-4.80): a (3.00,-4.55) la distancia centro-centro es
+         ~0.56 m, sin superposicion. Cerca de cinta_3 (Y=-4) para que
+         siga siendo la "parada" logica de brazo2. -->
+    <origin xyz="3.0 -4.55 0.0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ========== PLACAS DE ESQUINA (soporte fisico en los giros) ==========
+       Las cajas de colision de cinta_1/cinta_2 y cinta_2/cinta_3 solo se
+       solapan ~10x10cm de forma natural (bandas de 30cm de ancho girando
+       90 grados). Eso es insuficiente margen para una moneda que cambia
+       de direccion de empuje justo ahi: se cae por el borde antes de
+       llegar al area realmente solapada. Estas placas garantizan soporte
+       fisico continuo en toda la zona de giro, sin depender de que las
+       dos bandas coincidan al milimetro. -->
+  <link name="placa_esquina_1">
+    <visual><geometry><box size="0.5 0.5 0.05"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/><material name="acero"/></visual>
+    <collision><geometry><box size="0.5 0.5 0.05"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/></collision>
+    <inertial><mass value="5.0"/><inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/></inertial>
+  </link>
+  <joint name="j_placa_esquina_1" type="fixed">
+    <parent link="base_planta"/><child link="placa_esquina_1"/>
+    <!-- esquina cinta_1 -> cinta_2, world (-1.0, 0.0), superficie z=0.605 -->
+    <origin xyz="-1.0 0.0 0.58" rpy="0 0 0"/>
+  </joint>
+
+  <link name="placa_esquina_2">
+    <visual><geometry><box size="0.5 0.5 0.05"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/><material name="acero"/></visual>
+    <collision><geometry><box size="0.5 0.5 0.05"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/></collision>
+    <inertial><mass value="5.0"/><inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/></inertial>
+  </link>
+  <joint name="j_placa_esquina_2" type="fixed">
+    <parent link="base_planta"/><child link="placa_esquina_2"/>
+    <!-- esquina cinta_2 -> cinta_3, world (-1.0, -4.0), superficie z=0.605 -->
+    <origin xyz="-1.0 -4.0 0.58" rpy="0 0 0"/>
+  </joint>
+
+  <!-- placa_muelle: la banda cinta_3 solo tiene colision fisica hasta
+       X=2.95 (su caja real, 3.9m centrada en su joint). La plataforma
+       del dron esta en X=3.35. Sin esta placa la moneda cruza ~0.4m en
+       caida libre y nunca llega: este puente le da soporte continuo
+       hasta la plataforma del dron. -->
+  <link name="placa_muelle">
+    <visual><geometry><box size="0.7 0.3 0.05"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/><material name="acero"/></visual>
+    <collision><geometry><box size="0.7 0.3 0.05"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/></collision>
+    <inertial><mass value="3.0"/><inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/></inertial>
+  </link>
+  <joint name="j_placa_muelle" type="fixed">
+    <parent link="base_planta"/><child link="placa_muelle"/>
+    <origin xyz="3.15 -4.0 0.58" rpy="0 0 0"/>
+  </joint>
+
+</robot>

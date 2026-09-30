@@ -1,0 +1,23 @@
+# Entornos de Python (el venv del dron pesa ~235 MB: no se sube)
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+
+# PlatformIO / VS Code
+.pio/
+.vscode/
+
+# Visión: datos generados al entrenar y fotos de las monedas contadas
+vision/dataset/
+vision/dataset_crudo/
+vision/runs/
+vision/capturas/
+vision/*.pt
+!vision/modelos/monedas.pt
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini

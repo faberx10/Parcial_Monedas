@@ -1,0 +1,22 @@
+flowchart TD
+    A([Inicio]) --> B[Configurar pines ENA, IN1–IN4, ENB<br/>motores detenidos]
+    B --> C{¿Compilado para<br/>simulación Wokwi?}
+    C -- "No (carrito real)" --> D[Crear red WiFi 'Carrito_G3'<br/>IP 192.168.4.1]
+    C -- "Sí (WOKWI_SIM)" --> E[Conectarse a la red<br/>virtual Wokwi-GUEST]
+    D --> F[Iniciar servidor web<br/>rutas / , /cmd , /ping]
+    E --> F
+    F --> G[/loop/]
+    G --> H[Atender peticiones HTTP]
+    H --> I{¿Llegó /cmd?}
+    I -- Sí --> J[Calcular velocidad objetivo<br/>izquierda y derecha<br/>según dirección y % de velocidad]
+    J --> K[Guardar hora de la última orden]
+    I -- No --> L
+    K --> L[Leer órdenes del monitor serial<br/>w / a / s / d / x]
+    L --> M{¿Pasaron más de 400 ms<br/>sin órdenes?}
+    M -- Sí --> N[Objetivo = 0<br/>parada de seguridad]
+    M -- No --> O
+    N --> O{¿Pasaron 10 ms desde<br/>la última rampa?}
+    O -- Sí --> P[Acercar velocidad actual al objetivo<br/>subida suave · frenado rápido]
+    P --> Q[Escribir dirección en IN1–IN4<br/>y PWM en ENA / ENB]
+    Q --> G
+    O -- No --> G

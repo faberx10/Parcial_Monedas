@@ -1,0 +1,10 @@
+# Sistema de Logistica de Monedas Inteligentes - Grupo 3
+#
+# PyBullet se instala por separado via conda-forge (no tiene rueda de pip
+# para Windows). Ver README / historial del chat para el comando exacto:
+#   conda install -c conda-forge pybullet -y
+#
+# Lo demas si se instala normal con pip dentro del entorno conda activado:
+
+numpy>=1.24          # algebra para cinematica y trayectorias
+pyserial>=3.5         # puente serial con la ESP32 (Fase 5)

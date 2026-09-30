@@ -1,0 +1,17 @@
+# Reconocimiento de monedas con ESP32-CAM (Grupo 3)
+#
+# 1) PRIMERO instala PyTorch con soporte para tu GPU (RTX 3050), dentro del
+#    entorno conda activado:
+#    (copia el comando exacto de https://pytorch.org/get-started/locally/ ; ejemplo:)
+#      pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+#    Verifica:  python -c "import torch; print(torch.cuda.is_available())"   -> True
+#
+# 2) Despues instala el resto:
+#      pip install -r requirements_vision.txt
+
+ultralytics>=8.3.0      # YOLO (clasificacion de monedas)
+opencv-python>=4.8      # ventanas y procesamiento de imagen
+fastapi>=0.110          # servidor de la interfaz
+uvicorn[standard]>=0.29 # corre el servidor (incluye soporte WebSocket)
+requests>=2.31          # lectura del stream de la ESP32-CAM
+numpy>=1.24

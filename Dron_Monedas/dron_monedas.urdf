@@ -1,0 +1,211 @@
+<?xml version="1.0"?>
+<!--
+  ============================================================================
+  DRON LOGISTICO DE MONEDAS  -  Modelo URDF
+  Sistema de Logistica de Monedas Inteligentes - Grupo 3
+  ============================================================================
+
+  QUE ES UN URDF
+  ==============-
+  URDF = Unified Robot Description Format. Es un XML que describe un robot
+  como un arbol de <link> (piezas rigidas) unidos por <joint> (articulaciones).
+
+  Cada <link> tiene hasta tres bloques:
+    <inertial>   la FISICA: masa y matriz de inercia. Es lo unico que el
+                 motor de simulacion usa para calcular el movimiento.
+    <collision>  la geometria para detectar choques.
+    <visual>     lo que se dibuja en pantalla. No afecta la fisica.
+
+  Cada <joint> dice como se une un link hijo a su padre. Aqui todos son
+  de tipo "fixed" porque un cuadricoptero es un solo cuerpo rigido: lo unico
+  que se mueve son las helices, y esas las modelamos como fuerzas aplicadas,
+  no como articulaciones giratorias. Eso hace la simulacion mucho mas rapida
+  y estable.
+
+  MASAS: salen directamente de la hoja Presupuesto_Peso.xlsx
+    base_link  52.0 g   placa central, electronica, bateria
+    4 x brazo   1.0 g   estructura de los brazos
+    4 x motor   6.3 g   motor 8520 + helice + MOSFET
+    carga      10.0 g   monedas
+    ======================
+    TOTAL      91.2 g   = 0.0912 kg   <== coincide con la hoja
+
+  SISTEMA DE COORDENADAS
+    +X hacia adelante    +Y hacia la izquierda    +Z hacia arriba
+    Configuracion en X: los 4 motores a 45 grados de los ejes.
+    Brazo centro-motor L = 60 mm  a   motores adyacentes a 84.8 mm.
+    Con helices de 75 mm quedan 9.8 mm de separacion. Justo pero suficiente.
+
+  INERCIAS
+    Calculadas con las formulas de solido homogeneo:
+      caja:     Ixx = (1/12) m (dy^2 + dz^2)
+      cilindro: Ixx = (1/12) m (3r^2 + h^2)   Izz = (1/2) m r^2
+    Si cambias una masa, recalcula tambien su inercia o la fisica mentira.
+-->
+<robot name="dron_monedas">
+
+  <material name="azul">   <color rgba="0.15 0.35 0.75 1.0"/></material>
+  <material name="gris">   <color rgba="0.25 0.25 0.28 1.0"/></material>
+  <material name="naranja"><color rgba="0.95 0.55 0.10 1.0"/></material>
+  <material name="dorado"> <color rgba="0.85 0.68 0.20 1.0"/></material>
+  <material name="rojo">   <color rgba="0.80 0.15 0.15 1.0"/></material>
+
+  <!-- ================= CUERPO CENTRAL ================= -->
+  <!-- Placa central: ESP32-S3, IMU, bateria, perfboard de potencia -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.051"/>
+      <!-- caja de 60 x 60 x 30 mm -->
+      <inertia ixx="1.91e-5" ixy="0" ixz="0"
+               iyy="1.91e-5" iyz="0"
+               izz="3.06e-5"/>
+    </inertial>
+    <collision>
+      <geometry><box size="0.060 0.060 0.030"/></geometry>
+    </collision>
+    <visual>
+      <geometry><box size="0.060 0.060 0.030"/></geometry>
+      <material name="azul"/>
+    </visual>
+  </link>
+
+  <!-- ================= BRAZOS ================= -->
+  <!-- Cuatro brazos a 45 grados. Solo estructura, masa pequena. -->
+
+  <link name="brazo_0">
+    <inertial><mass value="0.001"/>
+      <inertia ixx="2.1e-8" ixy="0" ixz="0" iyy="2.1e-7" iyz="0" izz="2.1e-7"/>
+    </inertial>
+    <visual><geometry><box size="0.055 0.008 0.004"/></geometry><material name="gris"/></visual>
+  </link>
+  <joint name="j_brazo_0" type="fixed">
+    <parent link="base_link"/><child link="brazo_0"/>
+    <origin xyz="0.0212 -0.0212 0" rpy="0 0 -0.7854"/>
+  </joint>
+
+  <link name="brazo_1">
+    <inertial><mass value="0.001"/>
+      <inertia ixx="2.1e-8" ixy="0" ixz="0" iyy="2.1e-7" iyz="0" izz="2.1e-7"/>
+    </inertial>
+    <visual><geometry><box size="0.055 0.008 0.004"/></geometry><material name="gris"/></visual>
+  </link>
+  <joint name="j_brazo_1" type="fixed">
+    <parent link="base_link"/><child link="brazo_1"/>
+    <origin xyz="0.0212 0.0212 0" rpy="0 0 0.7854"/>
+  </joint>
+
+  <link name="brazo_2">
+    <inertial><mass value="0.001"/>
+      <inertia ixx="2.1e-8" ixy="0" ixz="0" iyy="2.1e-7" iyz="0" izz="2.1e-7"/>
+    </inertial>
+    <visual><geometry><box size="0.055 0.008 0.004"/></geometry><material name="gris"/></visual>
+  </link>
+  <joint name="j_brazo_2" type="fixed">
+    <parent link="base_link"/><child link="brazo_2"/>
+    <origin xyz="-0.0212 0.0212 0" rpy="0 0 -0.7854"/>
+  </joint>
+
+  <link name="brazo_3">
+    <inertial><mass value="0.001"/>
+      <inertia ixx="2.1e-8" ixy="0" ixz="0" iyy="2.1e-7" iyz="0" izz="2.1e-7"/>
+    </inertial>
+    <visual><geometry><box size="0.055 0.008 0.004"/></geometry><material name="gris"/></visual>
+  </link>
+  <joint name="j_brazo_3" type="fixed">
+    <parent link="base_link"/><child link="brazo_3"/>
+    <origin xyz="-0.0212 -0.0212 0" rpy="0 0 0.7854"/>
+  </joint>
+
+  <!-- ================= MOTORES + HELICES ================= -->
+  <!-- Motor 8520 (8.5 x 20 mm) + helice de 75 mm + su MOSFET = 6.3 g
+       Posiciones: L = 0.060 m a 45 grados a  0.0424 m en cada eje.
+         motor_0  (+x, -y)  adelante-derecha   giro CCW
+         motor_1  (+x, +y)  adelante-izquierda giro CW
+         motor_2  (-x, +y)  atras-izquierda    giro CCW
+         motor_3  (-x, -y)  atras-derecha      giro CW
+       El alternado CCW/CW es lo que cancela el par de reaccion en yaw. -->
+
+  <link name="motor_0">
+    <inertial><mass value="0.0063"/>
+      <inertia ixx="2.38e-7" ixy="0" ixz="0" iyy="2.38e-7" iyz="0" izz="5.69e-8"/>
+    </inertial>
+    <visual><geometry><cylinder radius="0.00425" length="0.020"/></geometry><material name="gris"/></visual>
+    <visual><origin xyz="0 0 0.013"/>
+      <geometry><cylinder radius="0.0375" length="0.002"/></geometry><material name="naranja"/></visual>
+  </link>
+  <joint name="j_motor_0" type="fixed">
+    <parent link="base_link"/><child link="motor_0"/>
+    <origin xyz="0.0424 -0.0424 0.008" rpy="0 0 0"/>
+  </joint>
+
+  <link name="motor_1">
+    <inertial><mass value="0.0063"/>
+      <inertia ixx="2.38e-7" ixy="0" ixz="0" iyy="2.38e-7" iyz="0" izz="5.69e-8"/>
+    </inertial>
+    <visual><geometry><cylinder radius="0.00425" length="0.020"/></geometry><material name="gris"/></visual>
+    <visual><origin xyz="0 0 0.013"/>
+      <geometry><cylinder radius="0.0375" length="0.002"/></geometry><material name="naranja"/></visual>
+  </link>
+  <joint name="j_motor_1" type="fixed">
+    <parent link="base_link"/><child link="motor_1"/>
+    <origin xyz="0.0424 0.0424 0.008" rpy="0 0 0"/>
+  </joint>
+
+  <link name="motor_2">
+    <inertial><mass value="0.0063"/>
+      <inertia ixx="2.38e-7" ixy="0" ixz="0" iyy="2.38e-7" iyz="0" izz="5.69e-8"/>
+    </inertial>
+    <visual><geometry><cylinder radius="0.00425" length="0.020"/></geometry><material name="gris"/></visual>
+    <visual><origin xyz="0 0 0.013"/>
+      <geometry><cylinder radius="0.0375" length="0.002"/></geometry><material name="naranja"/></visual>
+  </link>
+  <joint name="j_motor_2" type="fixed">
+    <parent link="base_link"/><child link="motor_2"/>
+    <origin xyz="-0.0424 0.0424 0.008" rpy="0 0 0"/>
+  </joint>
+
+  <link name="motor_3">
+    <inertial><mass value="0.0063"/>
+      <inertia ixx="2.38e-7" ixy="0" ixz="0" iyy="2.38e-7" iyz="0" izz="5.69e-8"/>
+    </inertial>
+    <visual><geometry><cylinder radius="0.00425" length="0.020"/></geometry><material name="gris"/></visual>
+    <visual><origin xyz="0 0 0.013"/>
+      <geometry><cylinder radius="0.0375" length="0.002"/></geometry><material name="naranja"/></visual>
+  </link>
+  <joint name="j_motor_3" type="fixed">
+    <parent link="base_link"/><child link="motor_3"/>
+    <origin xyz="-0.0424 -0.0424 0.008" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ================= CARGA: LA CUNA DE MONEDAS ================= -->
+  <!-- 10 g colgando debajo del centro. Aqui es donde vas a poder demostrar
+       como responde el controlador cuando el dron recoge o suelta la carga. -->
+  <link name="carga">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.010"/>
+      <inertia ixx="6.04e-7" ixy="0" ixz="0" iyy="6.04e-7" iyz="0" izz="1.04e-6"/>
+    </inertial>
+    <collision><geometry><box size="0.025 0.025 0.010"/></geometry></collision>
+    <visual><geometry><box size="0.025 0.025 0.010"/></geometry><material name="dorado"/></visual>
+  </link>
+  <joint name="j_carga" type="fixed">
+    <parent link="base_link"/><child link="carga"/>
+    <origin xyz="0 0 -0.022" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ================= SENSOR IR FRONTAL ================= -->
+  <!-- Marca visual del FC-51. La deteccion se hace por rayTest en el codigo. -->
+  <link name="sensor_ir">
+    <inertial><mass value="0.001"/>
+      <inertia ixx="1e-8" ixy="0" ixz="0" iyy="1e-8" iyz="0" izz="1e-8"/>
+    </inertial>
+    <visual><geometry><box size="0.006 0.014 0.006"/></geometry><material name="rojo"/></visual>
+  </link>
+  <joint name="j_sensor_ir" type="fixed">
+    <parent link="base_link"/><child link="sensor_ir"/>
+    <origin xyz="0.032 0 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>
