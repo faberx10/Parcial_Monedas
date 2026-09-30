@@ -17,7 +17,7 @@ El objetivo del proyecto es un **sistema logístico de monedas** basado en **ESP
 | **Reconocimiento de monedas** | Reconoce 7 monedas colombianas (nuevas y antiguas), las cuenta una sola vez, guarda la foto y muestra valor y cantidad en vivo | ESP32-CAM (OV5640) + YOLO11 en el PC + interfaz web | **Funcionando con la cámara real** |
 | **Carrito de transporte 4WD** | Lleva el dron y los vasos que el dron no puede cargar; se maneja desde el celular | ESP32 + L298N + página web embebida | **Construido y probado**, también simulado en Wokwi |
 | **Dron de transporte** | Despega a 1,20 m, vuela 1 m hasta el punto B, entrega la moneda y regresa; detecta obstáculos | ESP32-S3 (diseño), PID en cascada | Diseñado, presupuestado y simulado |
-| **Agente Jarvis y dashboard** | Chatbot que expone los datos del proyecto; seguimiento de ruta y métricas | – | Próxima fase |
+| **Agente Jarvis y dashboard** | Chatbot que expone los datos del proyecto; seguimiento de ruta y métricas | Agente IA | Próxima fase |
 
 **Resultados principales de este corte**
 
