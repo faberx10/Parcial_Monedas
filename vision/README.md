@@ -47,17 +47,22 @@ python 03_interfaz.py
 3. **Luz difusa y constante**: una lámpara de lado con un papel blanco delante para suavizarla. El flash de la ESP32 queda apagado desde el código porque el metal lo refleja y "quema" la foto.
 4. **Enfoca**: abre `http://192.168.1.14` en el navegador, dale Start Stream, pon una moneda y gira el anillo del lente hasta que se lean las letras. **Luego cierra esa pestaña** (la ESP32 solo atiende un video a la vez; si la dejas abierta, los scripts no reciben imagen).
 
-## Paso 2 — Un cambio en el sketch de Arduino
+## Paso 2 — Cambios en el sketch de Arduino (CameraWebServer)
 
-En `CameraWebServer.ino` busca este bloque y cambia `FRAMESIZE_QVGA` por `FRAMESIZE_VGA` (640×480, más detalle para distinguir antigua de nueva):
+1. En `board_config.h` deja activa **solo** esta línea (con `ESP_EYE` activo sale `Camera probe failed 0x106`):
+   ```cpp
+   #define CAMERA_MODEL_AI_THINKER // Has PSRAM
+   ```
+2. En `CameraWebServer.ino` sube la resolución a SVGA (800×600) en los dos lugares y mejora la calidad JPEG:
+   ```cpp
+   config.frame_size = FRAMESIZE_SVGA;
+   config.jpeg_quality = 10;
+   ...
+   s->set_framesize(s, FRAMESIZE_SVGA);   // el ejemplo trae FRAMESIZE_QVGA
+   ```
+3. Sube el sketch (IO0 a GND + RST → subir → quitar el puente → RST) y aliméntala con el **cargador de pared**.
 
-```cpp
-  if (config.pixel_format == PIXFORMAT_JPEG) {
-    s->set_framesize(s, FRAMESIZE_VGA);
-  }
-```
-
-Sube el sketch como siempre (IO0 + RST → soltar IO0 → Subir) y después aliméntala con el **cargador de pared**.
+No subas al repositorio el sketch con tu red y tu clave WiFi.
 
 ## Paso 3 — Instalar Python (una sola vez)
 
@@ -118,7 +123,7 @@ Se abre una ventana con el video y un **círculo guía**: la moneda siempre va d
 
 **Fondo (150 fotos):** el círculo vacío, cambiando un poco la luz. Si tienes más de una moneda del mismo tipo, fotografía varias: el desgaste cambia y el modelo aprende mejor.
 
-El panel de la derecha muestra cuántas llevas; se pone verde al llegar a 150.
+La consola muestra cuántas llevas, y al salir (Q) imprime el resumen por clase.
 
 ## Paso 6 — Entrenar
 
